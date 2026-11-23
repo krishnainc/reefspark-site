@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Reef 3D Processing</title>
+<style>
+  :root {
+    /* Plain document on a pale sea-glass ground; one teal accent, as in the ReefSpark tools. */
+    --ground: #f3f7f6; --paper: #ffffff; --ink: #13292d; --muted: #4f6a6a; --line: #d5e2df;
+    --accent: #0f7c86; --accent-soft: #e1f0f0; --warn: #8a5a00; --warn-soft: #fbf1dc;
+    --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0b1719; --paper: #11221f; --ink: #dcebe8; --muted: #93aeaa; --line: #24403c;
+      --accent: #4cc3cc; --accent-soft: #163a3d; --warn: #f0c46a; --warn-soft: #3a2f17;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0b1719; --paper: #11221f; --ink: #dcebe8; --muted: #93aeaa; --line: #24403c;
+    --accent: #4cc3cc; --accent-soft: #163a3d; --warn: #f0c46a; --warn-soft: #3a2f17;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.6 var(--sans); padding-inline: 16px; padding-block: 40px 64px; }
+  main { max-width: 760px; margin: 0 auto; display: grid; gap: 28px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(28px, 4.5vw, 38px); font-weight: 600; line-height: 1.15; }
+  h2 { font-size: 21px; font-weight: 600; margin-bottom: 10px; }
+  h3 { font-size: 16px; font-weight: 600; }
+  p { margin: 0; max-width: 66ch; }
+  .lede { font-size: 18px; color: var(--muted); margin-top: 10px; }
+  section { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; display: grid; gap: 12px; }
+  ul, ol { margin: 0; padding-left: 22px; display: grid; gap: 7px; max-width: 66ch; }
+  li::marker { color: var(--accent); }
+  .trade { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .trade > div { display: grid; gap: 8px; align-content: start; }
+  .trade h3 { padding-bottom: 6px; border-bottom: 2px solid var(--accent); }
+  .note { background: var(--warn-soft); color: var(--ink); border-left: 3px solid var(--warn); padding: 12px 14px; border-radius: 0 8px 8px 0; }
+  .note strong { color: var(--warn); }
+  .checklist li { padding-left: 2px; }
+  .fig { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fig figure { margin: 0; display: grid; gap: 6px; }
+  .fig video, .result video { width: 100%; height: auto; display: block; border-radius: 8px; background: #0b1a1e; aspect-ratio: 3 / 2; object-fit: cover; }
+  .result { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; align-items: center; }
+  .result video { aspect-ratio: 9 / 7; }
+  @media (max-width: 620px) { .result { grid-template-columns: 1fr; } }
+  .fig figcaption { font-size: 14px; color: var(--muted); }
+  .ok { color: var(--accent); font-weight: 600; }
+  .no { color: var(--warn); font-weight: 600; }
+  .form { font-size: 15px; background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; white-space: pre-wrap; font-family: var(--sans); margin: 0; }
+  .num { font-variant-numeric: tabular-nums; }
+  footer { color: var(--muted); font-size: 14px; text-align: center; }
+  @media (max-width: 520px) { section { padding: 18px 16px; } .fig { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Free 3D reef processing for reef researchers</h1>
+    <p class="lede">Send us a dive video of a reef transect. We turn it into a 3D model of the reef with benthic cover estimated by AI, free of charge. In return, you let us use your footage to improve the AI, and you label a few hundred points to teach it what your reef looks like.</p>
+  </header>
+
+  <section aria-labelledby="trade">
+    <h2 id="trade">The exchange</h2>
+    <div class="trade">
+      <div>
+        <h3>What you get, for each transect</h3>
+        <ul>
+          <li>A 3D model of the reef you can rotate in a web browser, coloured either by photo or by benthic group.</li>
+          <li>The 3D model as a file (.ply) that opens in CloudCompare or MeshLab, with the AI's class for every point.</li>
+          <li>Benthic cover as seen from above: live coral, dead coral, algae and rock, sand and rubble, other life. As a table and as a map.</li>
+          <li>A short video of the reconstruction, which you're welcome to use in talks and posts.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>What we ask in return</h3>
+        <ul>
+          <li>Permission to use your footage, still frames from it, and your labels to train and test our AI model (details below).</li>
+          <li>About an hour of labelling: in a web page, you see a photo with a crosshair and choose what is under it. Each class has example photos. A few hundred points in total.</li>
+          <li>Honest feedback on whether the results match what you know about the reef.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="result">
+      <video src="media/result.mp4" poster="media/result.jpg" autoplay muted loop playsinline aria-label="A rebuilt reef in 3D, first in photo colours, then coloured by the AI: green for live coral, orange for dead coral"></video>
+      <p>This is what a 4-minute transect becomes: millions of 3D points in the reef's own colours, then coloured by the AI, green for live coral and orange for dead coral. You can turn and zoom it yourself in the browser.</p>
+    </div>
+    <p>Your labels matter most. The AI was trained mainly on Red Sea reefs. A few hundred points from your reef will teach it more than anything else we can do, and they also tell both of us how accurate it is on your reef.</p>
+  </section>
+
+  <section aria-labelledby="film">
+    <h2 id="film">How to film</h2>
+    <p>The 3D model is built by matching details between overlapping video frames, so how you film decides how good it is.</p>
+    <div class="fig">
+      <figure>
+        <video src="media/good.mp4" poster="media/good.jpg" autoplay muted loop playsinline aria-label="Good footage: the camera looks straight down at branching coral and glides slowly along"></video>
+        <figcaption><span class="ok">Good:</span> camera pointing straight down, close to the reef, gliding slowly along the transect.</figcaption>
+      </figure>
+      <figure>
+        <video src="media/avoid.mp4" poster="media/avoid.jpg" autoplay muted loop playsinline aria-label="Poor footage: the camera looks forward across the reef toward open water"></video>
+        <figcaption><span class="no">Poor:</span> camera pointing forward. Much of each frame is distant reef or open water, and the 3D model comes out patchy.</figcaption>
+      </figure>
+    </div>
+    <ul class="checklist">
+      <li><strong>Straight down, steady height.</strong> Keep the camera level and about 1–2 m above the reef.</li>
+      <li><strong>Slow and continuous.</strong> Swim slowly along the transect without stopping, spinning or turning back. Each part of the reef should stay in view for a couple of seconds.</li>
+      <li><strong>One transect per video</strong>, 2–10 minutes long. 1080p or 4K at 30 fps or more.</li>
+      <li><strong>Turn off image stabilisation</strong> if your camera lets you (HyperSmooth, RockSteady and similar). It reshapes each frame and makes the 3D less accurate.</li>
+      <li><strong>Steady light.</strong> Overcast days or deeper water work best. Bright sun in shallow water makes flickering light patterns that confuse the matching.</li>
+      <li><strong>A scale object, if you can.</strong> A quadrat, scale bar or ruler of known size lying on the reef at a few points along the way. It lets us report areas in square metres. Without it, cover is still given as a percentage.</li>
+      <li><strong>Normal colour is fine.</strong> If you filmed in a log or flat colour profile (for example DJI D-Log M or GoPro Flat), please tell us which one.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="send">
+    <h2 id="send">How to send your footage</h2>
+    <ol>
+      <li>Put the original video files in a Google Drive folder. Please send the files straight off the camera, without editing or re-exporting.</li>
+      <li>Share the folder with us. We'll send you the email address to share it with.</li>
+      <li>Send us a short note, one per video:</li>
+    </ol>
+<pre class="form">Site name and GPS (or nearest place):
+Date and depth:
+Camera, and colour profile if not normal:
+Scale object in frame? (yes / no, and its size):
+How should we credit you?
+Can we show your results publicly? (yes / no / ask first)</pre>
+    <p>Processing takes about 5 hours per 5 minutes of video on our machine, and we check every result before sending it. Expect results within one to two weeks, depending on how many videos are waiting.</p>
+  </section>
+
+  <section aria-labelledby="data">
+    <h2 id="data">How we use your data</h2>
+    <ul>
+      <li><strong>You keep ownership</strong> of your footage and of everything we make from it.</li>
+      <li><strong>We use your footage, frames and labels to train and test the ReefSpark AI model.</strong> This is the only condition of the free processing.</li>
+      <li><strong>We don't publish your footage, results or site locations</strong> without your permission. If you say yes to public use, we credit you as you ask.</li>
+      <li><strong>Your labelling page</strong> shows a few dozen still frames from your video. It lives on this website at a link we send only to you, but the website is public, so anyone with that link could see those frames. We take it down when you've finished labelling.</li>
+      <li><strong>You can ask us to delete your data at any time.</strong> We'll delete the footage, frames and labels, and won't use them in any future training. A model already trained with them can't be un-trained, but we won't train new versions with your data.</li>
+      <li><strong>No fee, now or later,</strong> for the transects you send under this arrangement.</li>
+    </ul>
+    <p class="note"><strong>Please read before using the numbers:</strong> the cover figures are AI estimates and haven't yet been validated on reefs in your region. The AI sometimes mixes up live and dead coral. Use the results for exploration and pilot work, not as a replacement for a standard survey, until your labels tell us how accurate it is on your reef.</p>
+  </section>
+
+  <footer>ReefSpark · a reef survey pipeline built and run by a small independent team</footer>
+</main>
+<script>
+  // Looping clips stay still for people who ask their system for less motion.
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.querySelectorAll("video[autoplay]").forEach(v => { v.removeAttribute("autoplay"); v.pause(); v.controls = true; });
+  }
+</script>
+</body>
+</html>
